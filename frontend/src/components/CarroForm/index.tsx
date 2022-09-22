@@ -5,6 +5,12 @@ import { Button } from "primereact/button";
 import { Dropdown } from "primereact/dropdown";
 import APIHelper from "../../helper/APIHelper";
 import ICarro from "../../domain/model/ICarro";
+import IUtilizador, { IUtilizadorLogin } from "../../domain/model/IUtilizador";
+import { Toast } from "primereact/toast";
+import IException from "../../domain/model/IExcepion";
+import { AxiosResponse } from "axios";
+import { UtilizadorContext } from "../../helper/UtilizadorContext";
+import IContextStorage from "../../domain/model/IContextStorage";
 
 type Props = {
   visible: boolean;
@@ -19,52 +25,70 @@ const CarroForm: React.FC<Props> = function ({
   setCarroSaved,
   carro,
 }: Props) {
+
+  const toast = React.useRef<Toast>(null);
   const [marca, setMarca] = React.useState<string>("");
   const [modelo, setModelo] = React.useState<string>("");
   const [matricula, setMatricula] = React.useState<string>("");
+  const [utilizadorList, setUtilizadorList] = React.useState<Array<IUtilizador>>([]);
   const [action, setAction] = React.useState<string>("Registar");
+  const [utilizador, setUtilizador] = React.useState<IUtilizador>();
 
+const utilizadorContext = React.useContext<IContextStorage>(UtilizadorContext);
   React.useEffect(() => {
+    APIHelper.getUtilizadorList(utilizadorContext.utilizadorLogin as IUtilizadorLogin).then(response => {
+      if(response.status === 200){
+        setUtilizadorList(response.data as Array<IUtilizador>)
+      }else{ 
+        toast.current?.show({severity: 'error',summary: "Ocorreu um erro ao buscar utilizadores!", content: (response.data as IException).message})
+      }
+    })
     if (carro) {
       setAction("Actualizar");
       setMarca(carro.marca);
       setMatricula(carro.matricula);
       setModelo(carro.modelo);
+      if(carro.utilizadorId){
+        APIHelper.getUtilizador(carro.utilizadorId, utilizadorContext.utilizadorLogin as IUtilizadorLogin).then(response=> setUtilizador((response.data) as IUtilizador));
+      }
     } else {
       setAction("Registar");
       setMarca("");
       setModelo("");
       setMatricula("");
+      setUtilizador(undefined);
     }
-  }, [carro]);
+  }, [carro, utilizadorContext.utilizadorLogin]);
 
   async function handleOnClickButtonRegistar() {
     let response;
-    let c: ICarro = { marca: marca, modelo: modelo, matricula: matricula };
+    let c: ICarro = { marca: marca, modelo: modelo, matricula: matricula, utilizadorId: utilizador?.id as number };
     if (carro) {
       c = {
         id: carro.id,
         ...c,
       };
-      response = await APIHelper.updateCarro(c);
+      response = await APIHelper.updateCarro(c, utilizadorContext.utilizadorLogin as IUtilizadorLogin);
     } else {
       response = await APIHelper.saveCarro({
         ...c,
-      });
-      c = response.data;
+      }, utilizadorContext.utilizadorLogin as IUtilizadorLogin);
+      c = (response as AxiosResponse<ICarro>).data as ICarro;
     }
     if (response.status === 201 || response.status === 200) {
       setCarroSaved(c);
       setMarca("");
       setModelo("");
       setMatricula("");
+      setUtilizador(undefined)
     } else {
     }
   }
 
   return (
+    <>
     <Dialog
-      visible={visible}
+      visible={visible.valueOf()}
       style={{ width: "40vw" }}
       onHide={handleOnHideDialog}
       header="Registar carro"
@@ -106,7 +130,7 @@ const CarroForm: React.FC<Props> = function ({
       </span>
 
       <span className="p-float-label" style={{ display: "flex", flex: 1 }}>
-        <Dropdown style={{ flex: 1 }} />
+        <Dropdown options={utilizadorList.map(utilizador => {return {label: utilizador.nome, value: utilizador}})} value={utilizador} onChange={(e)=> setUtilizador(e.value)} style={{ flex: 1 }} />
         <label htmlFor="in">Utilizador</label>
       </span>
 
@@ -124,6 +148,8 @@ const CarroForm: React.FC<Props> = function ({
         />
       </div>
     </Dialog>
+    <Toast ref={toast}/>
+    </>
   );
 };
 

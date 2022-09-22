@@ -1,14 +1,11 @@
+import { Toast } from "primereact/toast";
 import React from "react";
-import IUtilizador from "../domain/model/IUtilizador";
+import IContextStorage from "../domain/model/IContextStorage";
+import IUtilizador, { IUtilizadorLogin } from "../domain/model/IUtilizador";
 
 type Props = {
   children: React.ReactElement;
 };
-
-export interface IContextStorage {
-  utilizador?: IUtilizador;
-  setUtilizador?: (utilizador: IUtilizador) => any;
-}
 
 export const UtilizadorContext = React.createContext<IContextStorage>({
   utilizador: undefined,
@@ -16,9 +13,13 @@ export const UtilizadorContext = React.createContext<IContextStorage>({
 });
 export const UtilizadorStorage = ({ children }: Props) => {
   const [utilizador, setUtilizador] = React.useState<IUtilizador>();
+  const [utilizadorLogin, setUtilizadorLogin] = React.useState<IUtilizadorLogin>();
+  const toast = React.useRef<Toast>(null);
+
   return (
-    <UtilizadorContext.Provider value={{ setUtilizador, utilizador }}>
+    <UtilizadorContext.Provider value={{ setUtilizador, utilizador, toast, setUtilizadorLogin, utilizadorLogin }}>
       {children}
+      <Toast ref={toast}/>
     </UtilizadorContext.Provider>
   );
 };

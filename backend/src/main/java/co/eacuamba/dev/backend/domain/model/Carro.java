@@ -1,5 +1,6 @@
 package co.eacuamba.dev.backend.domain.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
@@ -20,4 +21,8 @@ public class Carro {
     private String marca;
     private String modelo;
     private String matricula;
+
+    @JsonIgnore
+    @ManyToOne(cascade = CascadeType.PERSIST)
+    private Utilizador utilizador;
 }

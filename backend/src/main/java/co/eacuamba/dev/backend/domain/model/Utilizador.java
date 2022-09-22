@@ -1,5 +1,6 @@
 package co.eacuamba.dev.backend.domain.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -10,6 +11,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 
 @Getter
@@ -26,12 +28,10 @@ public class Utilizador implements UserDetails {
     private Long id;
     private String nome;
     private String apelido;
-    private LocalDate dataNascimento;
+    private Integer idade;
 
-    @Builder.Default
-    private String password = "$2a$12$pUjZfi2AnfB4j7CR1ys1uO.ELRgGXszi9ShbByg5aJR3qQQ996a/y";
-    @Builder.Default
-    private String username = "edilson";
+    private String password;
+    private String username;
 
     @Builder.Default
     private Boolean accountNonExpired = Boolean.TRUE;
@@ -42,9 +42,18 @@ public class Utilizador implements UserDetails {
     @Builder.Default
     private Boolean enabled = Boolean.TRUE;
 
+    @JsonIgnore
+    @Builder.Default
+    @OneToMany(mappedBy = "utilizador", cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    private List<Carro> carroList = new ArrayList<>();
+
+    @Builder.Default
+    @Transient
+    private List<? extends GrantedAuthority> grantedAuthorities = new ArrayList<>();
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return new ArrayList<SimpleGrantedAuthority>();
+        return this.grantedAuthorities;
     }
 
     @Override

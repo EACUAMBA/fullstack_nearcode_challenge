@@ -1,6 +1,7 @@
 import React from "react";
-import { IContextStorage, UtilizadorContext } from "./UtilizadorContext";
+import { UtilizadorContext } from "./UtilizadorContext";
 import { useNavigate } from "react-router-dom";
+import IContextStorage from "../domain/model/IContextStorage";
 
 type Props = {
   children: React.ReactElement;
@@ -11,12 +12,19 @@ const ProtectedRoute: React.FC<Props> = ({ children }: Props) => {
   const utilizadorContext =
     React.useContext<IContextStorage>(UtilizadorContext);
 
-  if (utilizadorContext.utilizador) {
-    return <>{children}</>;
-  } else {
-    navigate("/login");
-    return null;
+    React.useEffect(()=>{
+if(!utilizadorContext
+  .utilizador){
+    navigate("/");
   }
+    }, [])
+
+    if (utilizadorContext.utilizador) {
+      return <>{children}</>;
+    } else {
+      
+      return null;
+    }
 };
 
 export default ProtectedRoute;

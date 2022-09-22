@@ -3,15 +3,19 @@ import { Button } from "primereact/button";
 import { ConfirmDialog } from "primereact/confirmdialog";
 import { confirmDialog } from "primereact/confirmdialog";
 import { Toast } from "primereact/toast";
-import "./App.css";
 import CarroForm from "../../components/CarroForm";
 import CarTable from "../../components/CarTable";
 import ICarro from "../../domain/model/ICarro";
 import APIHelper from "../../helper/APIHelper";
+import IContextStorage from "../../domain/model/IContextStorage";
+import { UtilizadorContext } from "../../helper/UtilizadorContext";
+import { IUtilizadorLogin } from "../../domain/model/IUtilizador";
 
 function CarroCrud() {
   const toast = React.useRef<Toast>(null);
   const [carroList, setCarros] = React.useState<Array<ICarro>>([]);
+  const utilizadorContext =
+    React.useContext<IContextStorage>(UtilizadorContext);
 
   const [selectedCarroList, setSelectedCarroList] = React.useState<
     Array<ICarro>
@@ -22,7 +26,9 @@ function CarroCrud() {
 
   function fetchCarro() {
     setCarros([]);
-    APIHelper.getCarroList().then((carroList) => setCarros(carroList));
+    APIHelper.getCarroList(
+      utilizadorContext.utilizadorLogin as IUtilizadorLogin
+    ).then((carroList) => setCarros(carroList as Array<ICarro>));
   }
 
   const [carroFormVisibility, setCarroFormVisibility] =
@@ -48,7 +54,10 @@ function CarroCrud() {
         message: `Deseja remover o carros com as matriculas ${matriculas}`,
         accept: () => {
           selectedCarroList.forEach((carro) => {
-            APIHelper.deleteCarro(carro)
+            APIHelper.deleteCarro(
+              carro,
+              utilizadorContext.utilizadorLogin as IUtilizadorLogin
+            )
               .then(() => fetchCarro())
               .then(() =>
                 toast.current?.show({
@@ -65,7 +74,7 @@ function CarroCrud() {
 
   return (
     <>
-       <div>
+      <div>
         <div style={{ margin: "1rem 0", display: "flex", gap: "1rem" }}>
           <Button label="Adicionar" onClick={handleOnClickButtonAdicionar} />
           <Button
@@ -80,7 +89,8 @@ function CarroCrud() {
           handleOnHideDialog={handleOnHideDialog}
           carro={selectedCarroList.length > 0 ? selectedCarroList[0] : null}
           setCarroSaved={(carro) => {
-            setCarros((old) => [...old, carro]);
+            setSelectedCarroList([]);
+            fetchCarro();
             setCarroFormVisibility(false);
           }}
         />
@@ -94,7 +104,6 @@ function CarroCrud() {
       <Toast ref={toast} />
     </>
   );
-
 }
 
 export default CarroCrud;

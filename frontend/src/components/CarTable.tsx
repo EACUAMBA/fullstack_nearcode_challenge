@@ -37,7 +37,7 @@ const CarTable: React.FC<Props> = ({
         <Column field="modelo" header="Modelo" />
         <Column field="matricula" header="Matricula" />
         <Column field="utilizadorId" header="ID do Utilizador" />
-        <Column field="UtilizadorNome" header="Nome do utilizador" />
+        <Column field="utilizadorNome" header="Nome do utilizador" />
       </DataTable>
     </>
   );
